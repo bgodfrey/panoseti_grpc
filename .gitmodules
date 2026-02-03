@@ -1,0 +1,3 @@
+[submodule "gnss_config/U-Blox_F9T_Config"]
+	path = gnss_config/U-Blox_F9T_Config
+	url = git@github.com:bgodfrey/U-Blox_F9T_Config.git
