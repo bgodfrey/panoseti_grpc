@@ -1,6 +1,6 @@
 [submodule "gnss_config/U-Blox_F9T_Config"]
 	path = gnss_config/U-Blox_F9T_Config
 	url = git@github.com:bgodfrey/U-Blox_F9T_Config.git
-[submodule "temp_config"]
-	path = temp_config
+[submodule "temp_config/Environmental_Monitoring_Panoseti"]
+	path = temp_config/Environmental_Monitoring_Panoseti
 	url = git@github.com:bgodfrey/Environmental_Monitoring_Panoseti.git
