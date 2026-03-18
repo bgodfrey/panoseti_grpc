@@ -129,3 +129,17 @@ jobs:
           # --exit-code-from test_runner: fails the CI job if pytest fails
           docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test_runner
 
+  gnss-control-logging-tests:
+    name: GNSS Control Logging Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Run GNSS Control Logging Tests
+        run: |
+          cd tests/gnss_control
+          docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test_runner
+
