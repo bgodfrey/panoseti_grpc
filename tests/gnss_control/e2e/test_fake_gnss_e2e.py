@@ -78,9 +78,13 @@ class TestTelemetryReachesRedis:
         data = _wait_for_key(redis_connection, BASE_KEY, TELEM_TIMEOUT)
         assert data is not None, f"Missing key: {BASE_KEY}"
 
-        # The Telemetry Service stores flattened field names from GnssPayload
-        # (e.g. qerr_ns, num_vis, num_used, avg_cno, utc_ok).
-        expected_fields = {"qerr_ns", "num_vis", "num_used", "avg_cno", "utc_ok"}
+        # The Telemetry Service stores GnssPayload base fields (satellites,
+        # lat, lon, fix_mode) plus extra_data fields prefixed with "extra_".
+        expected_fields = {
+            "satellites", "fix_mode",
+            "extra_qerr_ns", "extra_num_vis", "extra_num_used",
+            "extra_avg_cno", "extra_utc_ok",
+        }
         present = expected_fields & set(data.keys())
         assert present, (
             f"BASE telemetry missing expected fields. "
@@ -92,7 +96,11 @@ class TestTelemetryReachesRedis:
         data = _wait_for_key(redis_connection, RECV_KEY, TELEM_TIMEOUT)
         assert data is not None, f"Missing key: {RECV_KEY}"
 
-        expected_fields = {"qerr_ns", "num_vis", "num_used", "avg_cno", "utc_ok"}
+        expected_fields = {
+            "satellites", "fix_mode",
+            "extra_qerr_ns", "extra_num_vis", "extra_num_used",
+            "extra_avg_cno", "extra_utc_ok",
+        }
         present = expected_fields & set(data.keys())
         assert present, (
             f"RECEIVER telemetry missing expected fields. "
@@ -103,18 +111,19 @@ class TestTelemetryReachesRedis:
         """Fake frames have utc_ok=True; verify this propagated to Redis."""
         data = _wait_for_key(redis_connection, BASE_KEY, TELEM_TIMEOUT)
         assert data is not None, f"Missing key: {BASE_KEY}"
-        utc_ok = data.get("utc_ok", "")
+        utc_ok = data.get("extra_utc_ok", "")
         # Redis stores everything as strings; accept "True", "1", or "true"
         assert utc_ok.lower() in ("true", "1"), (
-            f"Expected utc_ok=True for BASE, got {utc_ok!r}"
+            f"Expected extra_utc_ok=True for BASE, got {utc_ok!r}"
         )
 
     def test_base_satellites_visible(self, redis_connection):
-        """scenario_good_fix produces 10 satellites; num_vis should be ≥ 1."""
+        """scenario_good_fix produces 10 satellites; extra_num_vis should be ≥ 1."""
         data = _wait_for_key(redis_connection, BASE_KEY, TELEM_TIMEOUT)
         assert data is not None, f"Missing key: {BASE_KEY}"
-        num_vis = int(data.get("num_vis", 0))
-        assert num_vis >= 1, f"Expected num_vis ≥ 1, got {num_vis}"
+        # Struct round-trips ints as floats, so Redis stores e.g. "10.0"
+        num_vis = int(float(data.get("extra_num_vis", 0)))
+        assert num_vis >= 1, f"Expected extra_num_vis ≥ 1, got {num_vis}"
 
 
 class TestRtcmForwarding:

@@ -83,7 +83,7 @@ services:
       python fake_agent.py
         --device-id FAKE_BASE_001
         --ctrl-addr gnss_server:50051
-        --run-secs 45
+        --run-secs 180
         --wait-secs 60
         -v 2
     depends_on:
@@ -102,7 +102,7 @@ services:
       python fake_agent.py
         --device-id FAKE_RECV_001
         --ctrl-addr gnss_server:50051
-        --run-secs 45
+        --run-secs 180
         --wait-secs 60
         -v 2
     depends_on:
