@@ -10,6 +10,10 @@ COPY pyproject.toml LICENSE README.md /app/
 COPY src ./src/
 RUN pip install .
 
+# Install agent/server runtime dependencies from the submodule
+COPY gnss_config/U-Blox_F9T_Config/requirements.txt /tmp/gnss_requirements.txt
+RUN pip install -r /tmp/gnss_requirements.txt
+
 # Stage 2: Test Runner
 FROM python:3.9-slim AS runner
 ENV VENV_PATH=/opt/venv
@@ -20,4 +24,6 @@ COPY --from=builder /app/src /app/src
 RUN pip install pytest pytest-asyncio pytest-timeout redis
 COPY src/panoseti_grpc/telemetry/telemetry_config.toml .
 COPY tests ./tests
+# Copy submodule so tests can import agent_v1 and fake_gnss_generator
+COPY gnss_config/U-Blox_F9T_Config ./gnss_config/U-Blox_F9T_Config
 CMD ["python", "-m", "pytest", "--timeout=30", "-v", "tests/gnss_control"]
