@@ -1,0 +1,36 @@
+# ── Git / VCS ────────────────────────────────────────────────────────────────
+.git
+.gitmodules
+.gitignore
+
+# ── Python byte-code / caches ────────────────────────────────────────────────
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv
+venv
+env
+
+# ── Hardware log / telemetry data (large, not needed in containers) ───────────
+gnss_config/U-Blox_F9T_Config/utils/logs
+gnss_config/U-Blox_F9T_Config/utils/analysis
+gnss_config/U-Blox_F9T_Config/telem
+gnss_config/U-Blox_F9T_Config/logging
+logging
+telem
+
+# ── Backup / temp files ───────────────────────────────────────────────────────
+**/*.bak
+**/*.tmp
+temp_config
+
+# ── Docs / IDE ────────────────────────────────────────────────────────────────
+docs
+**/.vscode
+**/.idea
