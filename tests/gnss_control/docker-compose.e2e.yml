@@ -1,0 +1,144 @@
+##
+## E2E test stack for fake GNSS agents + server_v1.py + Telemetry Service
+##
+## Services start in this order:
+##   redis → telemetry → gnss_server → fake_base + fake_receiver → test_runner
+##
+## Run with:
+##   docker compose -f docker-compose.e2e.yml up \
+##     --build --abort-on-container-exit --exit-code-from test_runner
+##
+
+services:
+
+  # ── 1. Redis ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - gnss-test-net
+
+  # ── 2. Telemetry Service (receives ReportStatus from gnss_server) ───────────
+  telemetry:
+    build:
+      context: ../../
+      dockerfile: tests/gnss_control/Dockerfile
+      target: runner
+    # Override CMD: start the Telemetry gRPC service on port 50052
+    command: >
+      python -c "
+      import asyncio, os
+      from panoseti_grpc.telemetry.server import serve
+      asyncio.run(serve(
+          redis_host=os.getenv('REDIS_HOST', 'redis'),
+          redis_port=6379,
+          redis_db=0,
+          port=50052,
+      ))
+      "
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: >
+        python3 -c "import socket; s=socket.create_connection(('localhost',50052),timeout=2); s.close()"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    networks:
+      - gnss-test-net
+
+  # ── 3. GNSS Control Server (server_v1.py) ────────────────────────────────────
+  gnss_server:
+    build:
+      context: ../../
+      dockerfile: tests/gnss_control/Dockerfile.gnss
+      target: runtime
+    command: >
+      python server_v1.py
+        --config /app/gnss_config/U-Blox_F9T_Config/manifest_f9t_test.json5
+        --ip 0.0.0.0:50051
+        -v 2
+    environment:
+      # server_v1 forwards telemetry to the Telemetry Service
+      - TELEM_SVC_ADDR=telemetry:50052
+    depends_on:
+      telemetry:
+        condition: service_healthy
+    healthcheck:
+      test: >
+        python3 -c "import socket; s=socket.create_connection(('localhost',50051),timeout=2); s.close()"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    networks:
+      - gnss-test-net
+
+  # ── 4a. Fake BASE agent ──────────────────────────────────────────────────────
+  fake_base:
+    build:
+      context: ../../
+      dockerfile: tests/gnss_control/Dockerfile.gnss
+      target: runtime
+    command: >
+      python fake_agent.py
+        --device-id FAKE_BASE_001
+        --ctrl-addr gnss_server:50051
+        --run-secs 45
+        --wait-secs 60
+        -v 2
+    depends_on:
+      gnss_server:
+        condition: service_healthy
+    networks:
+      - gnss-test-net
+
+  # ── 4b. Fake RECEIVER agent ──────────────────────────────────────────────────
+  fake_receiver:
+    build:
+      context: ../../
+      dockerfile: tests/gnss_control/Dockerfile.gnss
+      target: runtime
+    command: >
+      python fake_agent.py
+        --device-id FAKE_RECV_001
+        --ctrl-addr gnss_server:50051
+        --run-secs 45
+        --wait-secs 60
+        -v 2
+    depends_on:
+      gnss_server:
+        condition: service_healthy
+    networks:
+      - gnss-test-net
+
+  # ── 5. Test Runner ────────────────────────────────────────────────────────────
+  test_runner:
+    build:
+      context: ../../
+      dockerfile: tests/gnss_control/Dockerfile
+      target: runner
+    command: >
+      python -m pytest --timeout=120 -v
+        tests/gnss_control/e2e/test_fake_gnss_e2e.py
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      fake_base:
+        condition: service_started
+      fake_receiver:
+        condition: service_started
+    networks:
+      - gnss-test-net
+
+networks:
+  gnss-test-net:
+    driver: bridge

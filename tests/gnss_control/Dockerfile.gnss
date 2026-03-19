@@ -1,0 +1,51 @@
+# Dockerfile.gnss
+# ===============
+# Single image used for both gnss_server (server_v1.py) and fake_agent
+# (fake_agent.py) containers in the E2E test stack.
+#
+# Build context: repo root (panoseti_grpc/)
+
+# ── Stage 1: install Python packages ────────────────────────────────────────
+FROM python:3.9-slim AS builder
+
+ENV VENV_PATH=/opt/venv
+RUN python3 -m venv $VENV_PATH
+ENV PATH="$VENV_PATH/bin:$PATH"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install panoseti_grpc (Telemetry Service client + get_logger used by server_v1)
+COPY pyproject.toml LICENSE README.md /app/
+COPY src ./src/
+RUN pip install --no-cache-dir .
+
+# Install GNSS submodule runtime dependencies
+COPY gnss_config/U-Blox_F9T_Config/requirements.txt /tmp/gnss_req.txt
+RUN pip install --no-cache-dir -r /tmp/gnss_req.txt
+
+
+# ── Stage 2: runtime image ────────────────────────────────────────────────────
+FROM python:3.9-slim AS runtime
+
+ENV VENV_PATH=/opt/venv
+ENV PATH="$VENV_PATH/bin:$PATH"
+WORKDIR /app
+
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app/src   /app/src
+
+# Copy the panoseti_grpc telemetry config so get_logger can find it
+COPY src/panoseti_grpc/telemetry/telemetry_config.toml /app/
+
+# Copy the full submodule (server_v1.py, fake_agent.py, fake_gnss_generator.py,
+# caster_setup_pb2*.py, manifest files, etc.)
+COPY gnss_config/U-Blox_F9T_Config /app/gnss_config/U-Blox_F9T_Config
+
+WORKDIR /app/gnss_config/U-Blox_F9T_Config
+
+# Default: print usage (overridden by docker-compose command:)
+CMD ["python", "--version"]
