@@ -19,6 +19,7 @@ so the test only needs to poll Redis with a generous timeout.
 
 import json
 import time
+from typing import Dict, Optional
 
 import pytest
 import redis
@@ -40,7 +41,7 @@ TELEM_TIMEOUT = 90.0    # max seconds to wait for both devices' telemetry
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def _wait_for_key(r: redis.Redis, key: str, timeout: float) -> dict | None:
+def _wait_for_key(r: redis.Redis, key: str, timeout: float) -> Optional[Dict[str, str]]:
     """Poll *key* (Redis hash) until it exists or *timeout* elapses."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
