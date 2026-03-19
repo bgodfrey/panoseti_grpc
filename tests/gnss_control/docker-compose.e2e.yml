@@ -28,20 +28,11 @@ services:
       context: ../../
       dockerfile: tests/gnss_control/Dockerfile
       target: runner
-    # Override CMD: start the Telemetry gRPC service on port 50052
-    command: >
-      python -c "
-      import asyncio, os
-      from panoseti_grpc.telemetry.server import serve
-      asyncio.run(serve(
-          redis_host=os.getenv('REDIS_HOST', 'redis'),
-          redis_port=6379,
-          redis_db=0,
-          port=50052,
-      ))
-      "
+    # Use the module's __main__ which reads REDIS_HOST and GRPC_PORT from env
+    command: ["python", "-m", "panoseti_grpc.telemetry.server"]
     environment:
       - REDIS_HOST=redis
+      - GRPC_PORT=50052
     depends_on:
       redis:
         condition: service_healthy
