@@ -2,7 +2,7 @@
 set -e
 
 # Define the compose file to use
-COMPOSE_FILE="tests/gnss_control/docker-compose.test.yml"
+COMPOSE_FILE="../../tests/gnss_control/docker-compose.test.yml"
 
 echo "--- Building GNSS Control CI Environment ---"
 docker compose -f $COMPOSE_FILE build
