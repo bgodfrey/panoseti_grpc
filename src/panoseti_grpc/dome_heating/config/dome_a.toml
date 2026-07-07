@@ -1,0 +1,26 @@
+[dome]
+device_id = "RAL_Laptop"
+description = "Local test dome environmental monitor"
+
+[telemetry]
+host = "localhost"
+port = 50051
+device_type = "dome_environment"
+interval_seconds = 5
+
+[sensors]
+roof_source = "ds18b20"
+internal_source = "sht45"
+
+# Leave blank for USB VID:PID auto-discovery.
+sht45_port = ""
+ds18b20_port = ""
+
+[notices]
+delta_notice_threshold_c = 2.5
+
+[heater]
+heater_on = false
+
+[logging]
+quiet = true

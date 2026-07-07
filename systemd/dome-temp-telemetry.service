@@ -1,0 +1,18 @@
+[Unit]
+Description=PANOSETI dome environmental telemetry
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Update these paths on each DAQ node if the checkout, config, or conda
+# environment live somewhere else.
+WorkingDirectory=/home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc/src
+ExecStart=/home/bgodfrey/anaconda3/envs/py312/bin/python -m panoseti_grpc.dome_heating.dome_telemetry --config /home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc/src/panoseti_grpc/dome_heating/config/dome_a.toml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -44,6 +44,12 @@ redis_prefix = "DEV_LIDAR_V1_"
 ttl_seconds = 86400
 description = "Testing new lidar sensor integration"
 
+[devices.dome_environment]
+mode = "experimental"
+redis_prefix = "DEV_DOME_ENV_"
+ttl_seconds = 86400
+description = "Dome environmental telemetry prototype"
+
 
 # --- 3. LOGGING CONFIGURATION ---
 [logging]

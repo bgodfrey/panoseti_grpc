@@ -1,0 +1,3 @@
+[submodule "temp_config/Environmental_Monitoring_Panoseti"]
+	path = temp_config/Environmental_Monitoring_Panoseti
+	url = git@github.com:bgodfrey/Environmental_Monitoring_Panoseti.git
