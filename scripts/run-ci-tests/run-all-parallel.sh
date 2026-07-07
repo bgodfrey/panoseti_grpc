@@ -20,6 +20,9 @@ PID_TELEMETRY=$!
 bash scripts/run-ci-tests/run-unified-server-ci-test.sh &
 PID_UNIFIED=$!
 
+bash scripts/run-ci-tests/run-dome-heating-ci-test.sh &
+PID_DOME_HEATING=$!
+
 # bash scripts/run-ci-tests/run-ublox-ci-test.sh &
 # PID_UBLOX=$!
 
@@ -31,6 +34,7 @@ wait $PID_DAQ_DATA || { echo "❌ DAQ Data tests FAILED"; ((FAIL_COUNT++)); }
 wait $PID_HASHPIPE || { echo "❌ Hashpipe DAQ Data tests FAILED"; ((FAIL_COUNT++)); }
 wait $PID_TELEMETRY || { echo "❌ Telemetry tests FAILED"; ((FAIL_COUNT++)); }
 wait $PID_UNIFIED || { echo "❌ Unified Server tests FAILED"; ((FAIL_COUNT++)); }
+wait $PID_DOME_HEATING || { echo "❌ Dome Heating tests FAILED"; ((FAIL_COUNT++)); }
 # wait $PID_UBLOX || { echo "❌ U-blox tests FAILED"; ((FAIL_COUNT++)); }
 
 echo "------------------------------------------------"

@@ -35,6 +35,11 @@ class GrpcLazyGroup(BaseLazyGroup):
             "daq-data": ("panoseti_grpc._cli.daq_data", "app", "DAQ Data service operations."),
             "daq-control": ("panoseti_grpc._cli.daq_control", "app", "DAQ Control service operations."),
             "daqnode": ("panoseti_grpc._cli.daqnode", "app", "Per-node health: gRPC services, Alloy, disk."),
+            "dome-temperature": (
+                "panoseti_grpc._cli.dome_temperature",
+                "app",
+                "Run the local dome temperature telemetry publisher.",
+            ),
             "server": ("panoseti_grpc._cli.server", "app", "Manage and run the unified gRPC server."),
         }
         super().__init__(*args, lazy_mapping=lazy_mapping, **kwargs)

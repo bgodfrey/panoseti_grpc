@@ -5,12 +5,14 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# Update these paths on each DAQ node if the checkout, config, or conda
-# environment live somewhere else.
-WorkingDirectory=/home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc
+# Optional local overrides. Copy systemd/dome-temperature.env.example to this
+# path on each DAQ node and edit paths/flags for that machine.
+EnvironmentFile=-/etc/panoseti/dome-temperature.env
 Environment=PYTHONUNBUFFERED=1
-Environment=PYTHONPATH=/home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc/src
-ExecStart=/home/bgodfrey/anaconda3/envs/py312/bin/python -m panoseti_grpc.dome_heating.dome_telemetry --config /home/bgodfrey/Berkeley/Panoseti/Codebase/panoseti_grpc/src/panoseti_grpc/dome_heating/config/dome_a.toml
+Environment=PSETI_GRPC_BIN=/opt/panoseti/bin/pseti-grpc
+Environment=DOME_TEMPERATURE_CONFIG=/etc/panoseti/dome-temperature.toml
+Environment=DOME_TEMPERATURE_FLAGS=
+ExecStart=/bin/sh -c 'exec "$PSETI_GRPC_BIN" dome-temperature --config "$DOME_TEMPERATURE_CONFIG" $DOME_TEMPERATURE_FLAGS'
 Restart=always
 RestartSec=10
 

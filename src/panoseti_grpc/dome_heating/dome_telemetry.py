@@ -5,10 +5,22 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 import time
 import tomllib
 from dataclasses import dataclass
+from pathlib import Path
 
+
+def add_repo_root_for_sensor_submodule() -> None:
+    """Make the checked-out sensor submodule importable for console scripts."""
+    repo_root = Path(__file__).resolve().parents[3]
+    repo_root_str = str(repo_root)
+    if repo_root_str not in sys.path:
+        sys.path.insert(0, repo_root_str)
+
+
+add_repo_root_for_sensor_submodule()
 from temp_config.Environmental_Monitoring_Panoseti.ds18b20 import DS1820BUSB
 from temp_config.Environmental_Monitoring_Panoseti.sht45 import SHT45USB
 
@@ -182,7 +194,7 @@ def build_payload(
     }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default=None, help="Path to DAQ-node TOML config")
     parser.add_argument("--once", action="store_true", help="Publish one sample and exit")
@@ -230,7 +242,7 @@ def main() -> int:
         default=None,
         help=advanced,
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Resolve deployment config after parsing so any CLI flag can override the
     # local dome TOML for one-off tests.
