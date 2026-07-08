@@ -130,7 +130,9 @@ class BaseLazyGroup(TyperGroup):
 
                 obj = getattr(mod, attr_name)
 
-                if isinstance(obj, typer.Typer):
+                if isinstance(obj, click.Command):
+                    click_cmd = obj
+                elif isinstance(obj, typer.Typer):
                     click_cmd = typer.main.get_command(obj)
                 else:
                     # Wrap bare function in a Typer app
