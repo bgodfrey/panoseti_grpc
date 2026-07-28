@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
+from typing import Annotated
 
-import click
+import typer
+
+app = typer.Typer(help="Pass arguments through to the U-Blox F9T GNSS orchestrator.")
 
 
 def _repo_root() -> Path:
@@ -15,7 +17,12 @@ def _orchestrator_script() -> Path:
     return _repo_root() / "gnss_config" / "U-Blox_F9T_Config" / "gnss_scripts" / "gnss_orchestrator.py"
 
 
-@click.command(
+def _ublox_repo() -> Path:
+    return _repo_root() / "gnss_config" / "U-Blox_F9T_Config"
+
+
+@app.command(
+    name="gnss",
     context_settings={
         "allow_extra_args": True,
         "ignore_unknown_options": True,
@@ -23,20 +30,31 @@ def _orchestrator_script() -> Path:
     add_help_option=False,
     help="Pass arguments through to the U-Blox F9T GNSS orchestrator.",
 )
-@click.argument("args", nargs=-1, type=click.UNPROCESSED)
-@click.pass_context
-def app(ctx: click.Context, args: tuple[str, ...]) -> None:
+def passthrough(
+    ctx: typer.Context,
+    args: Annotated[list[str] | None, typer.Argument(help="Arguments passed to gnss_orchestrator.py")] = None,
+) -> None:
     del ctx
 
     script = _orchestrator_script()
     if not script.exists():
-        click.echo(
+        print(
             f"GNSS orchestrator not found at {script}. "
             "Run `git submodule update --init --recursive` from the panoseti_grpc checkout.",
-            err=True,
+            file=sys.stderr,
         )
-        raise click.exceptions.Exit(2)
+        raise typer.Exit(2)
 
-    argv = list(args) or ["--help"]
-    os.chdir(script.parent)
-    os.execv(sys.executable, [sys.executable, str(script), *argv])
+    argv = list(args or []) or ["--help"]
+    repo = _ublox_repo()
+    repo_path = str(repo)
+    if repo_path not in sys.path:
+        sys.path.insert(0, repo_path)
+
+    from gnss_scripts.gnss_orchestrator import main
+
+    try:
+        code = main(argv)
+    except SystemExit as exc:
+        code = exc.code if isinstance(exc.code, int) else 1
+    raise typer.Exit(code)
