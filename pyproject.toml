@@ -77,9 +77,15 @@ docs = [
     "myst-parser",
     "sphinx-autodoc-typehints",
 ]
+gnss = [
+    "ublox-f9t-config>=0.1,<0.2",
+]
 
 [project.scripts]
 pseti-grpc           = "panoseti_grpc.cli:standalone_app"
+
+[project.entry-points."ublox_f9t.status_publishers"]
+panoseti = "panoseti_grpc.gnss.status:create_publisher"
 
 [project.urls]
 Homepage = "https://github.com/panoseti/panoseti_grpc"
